@@ -1,0 +1,10 @@
+stops.txt filter=lfs diff=lfs merge=lfs -text
+transfers.txt filter=lfs diff=lfs merge=lfs -text
+agency.txt filter=lfs diff=lfs merge=lfs -text
+calendar_dates.txt filter=lfs diff=lfs merge=lfs -text
+calendar.txt filter=lfs diff=lfs merge=lfs -text
+routes.txt filter=lfs diff=lfs merge=lfs -text
+shapes.txt filter=lfs diff=lfs merge=lfs -text
+stop_times.txt filter=lfs diff=lfs merge=lfs -text
+trips.txt filter=lfs diff=lfs merge=lfs -text
+google_transit.zip filter=lfs diff=lfs merge=lfs -text

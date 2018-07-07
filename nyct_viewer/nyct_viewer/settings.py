@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'channels',
     'viewer',
     'realtime_stream',
+    'nyct_scraper',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -123,3 +124,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 ASGI_APPLICATION = 'nyct_viewer.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}

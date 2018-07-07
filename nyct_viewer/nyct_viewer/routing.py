@@ -1,7 +1,9 @@
 # mysite/routing.py
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.routing import ChannelNameRouter
 import realtime_stream.routing
+import nyct_scraper.routing
 
 application = ProtocolTypeRouter({
     # (http->django views is added by default)
@@ -10,4 +12,7 @@ application = ProtocolTypeRouter({
             realtime_stream.routing.websocket_urlpatterns
         )
     ),
+    'channel': ChannelNameRouter(
+        nyct_scraper.routing.scraper_channels
+    )
 })
