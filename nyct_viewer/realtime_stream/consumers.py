@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class RealtimeStreamConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.send_raw = False
 
     async def connect(self):
         self.group_name = str(uuid.uuid4())
@@ -39,18 +40,27 @@ class RealtimeStreamConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
+        data = json.loads(text_data)
         # Any websocket messages sent BACK from client to server
         # are a request of some kind, should be rare if not used at all
+        if 'type' in data and data['type'] == 'send_raw':
+            if 'status' in data and not data['status']:
+                self.send_raw = False
+            else:
+                self.send_raw = True
         await self.channel_layer.group_send(
                 "realtime_stream",
                 {
                     'type': 'data_request',
-                    'request': text_data_json,
+                    'request': data,
                 }
         )
 
     async def raw_data(self, event):
+        if self.send_raw:
+            await self.send(text_data=json.dumps(event))
+
+    async def train_status(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def data_request(self, event):

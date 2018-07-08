@@ -2,7 +2,6 @@ import logging
 import threading
 import schedule
 import atexit
-import json
 import pandas as pd
 try:
     from NYCT_tracker import NYCT_Tracker
@@ -10,22 +9,6 @@ except ImportError:
     from .NYCT_tracker import NYCT_Tracker
 
 logger = logging.getLogger(__name__)
-
-# Let's try to instantiate a django channel
-# Failing that (if django is unavailable or not configured),
-# We'll just fake it - this won't propigate updates!
-try:
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
-    from django.core.exceptions import ImproperlyConfigured
-except ImportError:
-    logger.exception("Unable to import django channels! Faking it")
-
-    def get_channel_layer():
-        return None
-
-    def async_to_sync(foo):
-        pass
 
 
 class NYCT_Scraper(object):
@@ -55,16 +38,20 @@ class _NYCT_Scraper(threading.Thread):
         self.running = False
         self.latest_trips = pd.DataFrame()
         self.latest_updates = pd.DataFrame()
+        self.subscribers = []
         self.exit = threading.Event()
-        try:
-            self.channel_layer = get_channel_layer()
-        except ImproperlyConfigured:
-            logger.exception("Unable to instantiate django channel! Faking it")
-            self.channel_layer = None
         self.trk = NYCT_Tracker(None)
         atexit.register(self.stop)
         schedule.every(30).seconds.do(self._trip_update)
         self.restart()
+
+    def subscribe(self, func):
+        if func not in self.subscribers:
+            self.subscribers.append(func)
+
+    def unsubscribe(self, func):
+        if func in self.subscribers:
+            self.subscribers.remove(self.subscribers.index(func))
 
     def restart(self):
         # Threads don't normally allow restarting
@@ -109,11 +96,13 @@ class _NYCT_Scraper(threading.Thread):
                      len(trips), len(updates), len(other))
         self.latest_trips = trips
         self.latest_updates = updates
-        if self.channel_layer is not None:
-            async_to_sync(self.channel_layer.group_send)(
-                    "realtime_stream",
-                    {
-                        'type': 'raw_data',
-                        'data': json.loads(trips.to_json(orient='records'))
-                    }
-            )
+        for func in self.subscribers:
+            if hasattr(func, '__call__'):
+                # Squash the heck out of interrupts:
+                # We don't want one callback func to screw it up for others
+                try:
+                    func(trips, updates, other)
+                except KeyboardInterrupt:
+                    break
+                except:
+                    logger.exception("")

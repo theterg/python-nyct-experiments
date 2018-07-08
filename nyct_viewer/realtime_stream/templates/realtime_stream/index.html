@@ -13,6 +13,13 @@
         'ws://' + window.location.host +
         '/ws/realtime_stream/');
 
+    socket.onopen = function(e) {
+        socket.send(JSON.stringify({
+            'type': 'send_raw',
+            'status': true,
+        }))
+    }
+
     socket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         console.log("Recv:", data);
