@@ -28,6 +28,33 @@
         '7': '#b933ad',
         'S': '#808183',
     };
+    var line_icons = {
+        '1': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/1.png',
+        '2': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/2.png',
+        '3': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/3.png',
+        '4': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/4.png',
+        '5': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/5.png',
+        '6': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/6.png',
+        '7': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/7.png',
+        'A': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/a.png',
+        'B': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/b.png',
+        'C': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/c.png',
+        'D': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/d.png',
+        'E': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/e.png',
+        'F': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/f.png',
+        'G': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/g.png',
+        'H': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/h.png',
+        'J': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/j.png',
+        'L': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/l.png',
+        'M': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/m.png',
+        'N': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/n.png',
+        'Q': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/q.png',
+        'R': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/r.png',
+        'S': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/s.png',
+        'T': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/t.png',
+        'W': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/w.png',
+        'Z': 'https://github.com/louh/nyc-subway-icons/raw/master/build/png/z.png',
+    };
   var find_color = function(line_char) {
     for (line in line_colors) {
         if (line.indexOf(line_char) != -1) {
@@ -47,21 +74,34 @@
         console.log(data);
         if (data.type == "train_status") {
 			for (idx in trainmarkers) {
-				var circle = trainmarkers[idx];
-				mymap.removeLayer(circle);
+				var marker = trainmarkers[idx];
+				mymap.removeLayer(marker);
 			}
 			trainmarkers = [];
             for (idx in data.data) {
 				var train = data.data[idx];
-                var circle = L.circle([train.lat, train.lon], {
+                /*var circle = L.circle([train.lat, train.lon], {
                         color: find_color(train.route_id),
                         fillOpacity: 0.5,
                         radius: 30, 
+                });*/
+                if (train.route_id == 'FS') {
+                    train.route_id = 'S';
+                }
+                var imageUrl = line_icons[train.route_id[0]];
+                if (imageUrl === undefined) {
+                    console.log("couldn't find "+train.route_id);
+                    continue;
+                }
+                var icon = L.icon({
+                    iconUrl: imageUrl,
+                    iconSize: [15, 15], // size of the icon
                 });
+                var circle = L.marker([train.lat, train.lon], {icon: icon});
                 if (train.direction == 1) {
-                    circle.bindPopup("Northbound "+train.route_id+" at "+train.stop_name);
+                    circle.bindPopup("Uptown "+train.route_id+" at "+train.stop_name);
                 } else {
-                    circle.bindPopup("Southbound "+train.route_id+" at "+train.stop_name);
+                    circle.bindPopup("Downtown "+train.route_id+" at "+train.stop_name);
                 }
 				circle.addTo(mymap);
 				trainmarkers.push(circle);
